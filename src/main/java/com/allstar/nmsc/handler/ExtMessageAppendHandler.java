@@ -10,9 +10,9 @@ import com.allstar.nmsc.util.ResponseCode;
 import com.networknt.body.BodyHandler;
 
 /**
- * @description Message extend property, all extend key-value save to msg_ext
- *              column. this interface is append to msg_ext column:
- *              msg_ext=msg_ext+value(like: {'key1':'value1','key2':'vaue2'})
+ * Message extend property, all extend key-value save to msg_ext column. this
+ * interface is append to msg_ext column: msg_ext=msg_ext+value(like:
+ * {'key1':'value1','key2':'vaue2'})
  * 
  * @author vincent.ma
  */

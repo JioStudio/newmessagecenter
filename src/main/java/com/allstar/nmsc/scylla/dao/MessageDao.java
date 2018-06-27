@@ -130,7 +130,7 @@ public class MessageDao
 	 * 
 	 * @param sessionKey
 	 *            userAId + userBId
-	 * @return List<MessageEntity>
+	 * @return
 	 */
 	public List<MessageEntity> findMessageListBySessionKey(String sessionKey)
 	{

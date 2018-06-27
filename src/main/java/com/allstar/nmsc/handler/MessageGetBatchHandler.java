@@ -13,7 +13,8 @@ import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 
 /**
- * @description get batch messages
+ * get batch messages
+ * 
  * @author aminiy
  */
 public class MessageGetBatchHandler implements HttpHandler
@@ -25,8 +26,8 @@ public class MessageGetBatchHandler implements HttpHandler
 		try
 		{
 			HashMap<String, String> bodyMap = (HashMap<String, String>) exchange.getAttachment(BodyHandler.REQUEST_BODY);
-			String receiverId = bodyMap.get("to");
 			String senderId = bodyMap.get("from");
+			String receiverId = bodyMap.get("to");
 
 			Assert.notNull(senderId, "sender id must be not null.");
 			Assert.notNull(receiverId, "receiver id must be not null.");
@@ -37,13 +38,16 @@ public class MessageGetBatchHandler implements HttpHandler
 			{
 				for (MessageEntity entity : entityList)
 				{
-					resp.put("sessionKey", entity.getSession_key());
-					resp.put("messageId", entity.getMessage_id());
-					resp.put("messageIndex", entity.getMessage_index());
-					resp.put("messageStatus", entity.getMessage_status());
-					resp.put("senderId", entity.getSender_id());
-					resp.put("receiverId", entity.getReceiver_id());
-					resp.put("message", entity.getMessage_content());
+					JSONObject message = new JSONObject();
+					message.put("sessionKey", entity.getSession_key());
+					message.put("messageId", entity.getMessage_id());
+					message.put("messageIndex", entity.getMessage_index());
+					message.put("messageStatus", entity.getMessage_status());
+					message.put("senderId", entity.getSender_id());
+					message.put("receiverId", entity.getReceiver_id());
+					message.put("message", entity.getMessage_content());
+
+					resp.put("message", message);
 				}
 			}
 

@@ -31,24 +31,6 @@
                         "format": "int32"
                     }
                 }
-            },
-            "Pet": {
-                "required": [
-                    "id",
-                    "name"
-                ],
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    "tag": {
-                        "type": "string"
-                    }
-                }
             }
         }
     },
@@ -59,37 +41,6 @@
     ],
     "openapi": "3.0.0",
     "paths": {
-        "/health": {
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "successful operation"
-                    }
-                },
-                "parameters": []
-            }
-        },
-        "/pets/{petId}": {
-        	"get":{}
-        },
-        "/server/info": {
-            "get": {
-                "security": [
-                    {
-                        "petstore_auth": [
-                            "server.info.r"
-                        ]
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation"
-                    }
-                },
-                "parameters": []
-            }
-        },
-        
         "/getmessage": {
             "post": {
                 "security": [
@@ -119,18 +70,7 @@
         "/extmessageremove":{
         	"post":{}
         },"/extmessageappend":{
-        	"post":{
-					"requestBody": {
-                    	"description": "Pet to add to the store",
-                   	 	"required": true,
-                    	"content": {
-                        	"application/json": {
-                            	"schema": {
-                                }
-                            }
-                        }
-                    }
-		     }
+        	"post":{}
         },"/extmessageupdate":{
         	"post":{}
         },"/extmessageupdateone":{

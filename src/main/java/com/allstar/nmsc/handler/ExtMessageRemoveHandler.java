@@ -10,8 +10,7 @@ import com.allstar.nmsc.util.ResponseCode;
 import com.networknt.body.BodyHandler;
 
 /**
- * @description All ExtMessage...Handler is operation on msg_ext column.
- *              msg_ext=msg_ext-key
+ * All ExtMessage...Handler is operation on msg_ext column. msg_ext=msg_ext-key
  * 
  * @author vincent.ma
  */
