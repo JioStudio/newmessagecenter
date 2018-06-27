@@ -68,6 +68,21 @@ public class MessageEntity
 		this.message_time = new Date();
 	}
 
+	public static String getSessionKey(String sender_id, String receiver_id)
+	{
+		return getSessionKey(Long.valueOf(sender_id), Long.valueOf(receiver_id));
+	}
+
+	public static String getSessionKey(long sender_id, long receiver_id)
+	{
+		String session_key = sender_id + "" + receiver_id;
+		if (sender_id < receiver_id)
+		{
+			session_key = receiver_id + "" + sender_id;
+		}
+		return session_key;
+	}
+
 	public String getSession_key()
 	{
 		return session_key;

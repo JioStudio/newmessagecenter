@@ -15,12 +15,17 @@ import com.allstar.nmsc.scylla.repository.SessionInfoEntity;
  */
 public class SessionInfoDao
 {
-	/*
+	/**
 	 * This Method should be called when insert a new message record.
 	 * 
 	 * @param sender_id
+	 *            Message Sender's User ID
+	 * 
 	 * @param receiver_id
+	 *            Message Receiver's User ID
+	 * 
 	 * @param last_index
+	 *            The last message Index
 	 */
 	public void updateSessionInfo(long sender_id, long receiver_id, long last_index)
 	{
@@ -32,7 +37,6 @@ public class SessionInfoDao
 			senderInfo.setReceiver_id(receiver_id);
 			senderInfo.setLast_index(last_index);
 			senderInfo.setLast_opt_time(new Date());
-			op.insert(senderInfo);
 
 			SessionInfoEntity receiverInfo = new SessionInfoEntity();
 			receiverInfo.setSender_id(receiver_id);
@@ -40,7 +44,7 @@ public class SessionInfoDao
 			receiverInfo.setLast_index(last_index);
 			receiverInfo.setLast_opt_time(new Date());
 
-			op.insert(receiverInfo);
+			op.batchOps().insert(senderInfo, receiverInfo).execute();
 		}
 		else if (1 < last_index)
 		{
