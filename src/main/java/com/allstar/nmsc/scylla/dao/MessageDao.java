@@ -125,31 +125,33 @@ public class MessageDao
 		op.insert(msg);
 	}
 
-	public MessageEntity findMessageBySessionKey(String sessionKey)
+	/**
+	 * limit size 20
+	 * 
+	 * @param sessionKey
+	 *            userAId + userBId
+	 * @return List<MessageEntity>
+	 */
+	public List<MessageEntity> findMessageListBySessionKey(String sessionKey)
 	{
-		System.out.println("test method is called.");
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		// List<MessageEntity> list = op.select(Query.empty(),
-		// MessageEntity.class);
-		// if(list!=null){
-		// System.out.println(list.size());
-		// }
+//		List<MessageEntity> list = op.select(Query.empty(), MessageEntity.class);
+//		if (list != null)
+//		{
+//			System.out.println(list.size());
+//		}
 
 		// test max
-		// Select select =
-		// QueryBuilder.select().max("msg_index").from("rcs_message");//
-		// where...
-		// Long count = op.getCqlOperations().queryForObject(select,
-		// Long.class);
-		// System.out.println("----->>Count=" + count);
+//		Select select = QueryBuilder.select().max("msg_index").from("rcs_message");// where...
+//		Long count = op.getCqlOperations().queryForObject(select, Long.class);
+//		System.out.println("----->>Count=" + count);
 
 		// spring count method
-		// Select select = QueryBuilder.select().countAll().from("");
-		// Long count = getCqlOperations().queryForObject(select, Long.class);
-		// return
-		// getCqlOperations().queryForResultSet(select).iterator().hasNext();
+//		Select select = QueryBuilder.select().countAll().from("");
+//		Long count = getCqlOperations().queryForObject(select, Long.class);
+//		return getCqlOperations().queryForResultSet(select).iterator().hasNext();
 
-		return op.selectOne(Query.query(Criteria.where("session_key").is(sessionKey)), MessageEntity.class);
+		return op.select(Query.query(Criteria.where("session_key").is(sessionKey)).limit(20), MessageEntity.class);
 	}
 
 	public Long getMaxIndex(String sessionKey)
