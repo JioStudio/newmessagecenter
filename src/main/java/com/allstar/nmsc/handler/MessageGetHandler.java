@@ -1,13 +1,9 @@
-
 package com.allstar.nmsc.handler;
 
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-
 import java.util.HashMap;
-
 import org.springframework.util.Assert;
-
 import com.alibaba.fastjson.JSONObject;
 import com.allstar.nmsc.scylla.dao.MessageDao;
 import com.allstar.nmsc.scylla.repository.MessageEntity;
@@ -17,7 +13,6 @@ import com.networknt.body.BodyHandler;
 
 public class MessageGetHandler implements HttpHandler
 {
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public void handleRequest(HttpServerExchange exchange)
@@ -34,7 +29,7 @@ public class MessageGetHandler implements HttpHandler
 			Assert.notNull(messageIndex, "messageIndex must be not null.");
 
 			MessageEntity entity = new MessageDao().findMessageByMsgIndex(MessageEntity.getSessionKey(sender_id, receiver_id), Long.valueOf(messageIndex));
-			
+
 			JSONObject resp = new JSONObject();
 			if (entity != null)
 			{
