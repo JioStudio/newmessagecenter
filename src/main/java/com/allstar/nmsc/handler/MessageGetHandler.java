@@ -11,6 +11,11 @@ import com.allstar.nmsc.util.Response;
 import com.allstar.nmsc.util.ResponseCode;
 import com.networknt.body.BodyHandler;
 
+/**
+ * get one message
+ * 
+ * @author aminiy
+ */
 public class MessageGetHandler implements HttpHandler
 {
 	@SuppressWarnings("unchecked")
@@ -22,13 +27,15 @@ public class MessageGetHandler implements HttpHandler
 			HashMap<String, String> bodyMap = (HashMap<String, String>) exchange.getAttachment(BodyHandler.REQUEST_BODY);
 			String receiver_id = bodyMap.get("to");
 			String sender_id = bodyMap.get("from");
+			String tenantId = bodyMap.get("tenantId");
 			String messageIndex = bodyMap.get("messageIndex");
 
 			Assert.notNull(sender_id, "sender id must be not null.");
 			Assert.notNull(receiver_id, "receiver id must be not null.");
 			Assert.notNull(messageIndex, "messageIndex must be not null.");
+			Assert.notNull(tenantId, "tenantId must be not null.");
 
-			MessageEntity entity = new MessageDao().findMessageByMsgIndex(MessageEntity.getSessionKey(sender_id, receiver_id), Long.valueOf(messageIndex));
+			MessageEntity entity = new MessageDao().findMessageByMsgIndex(MessageEntity.getSessionKey(sender_id, receiver_id), tenantId, Long.valueOf(messageIndex));
 
 			JSONObject resp = new JSONObject();
 			if (entity != null)

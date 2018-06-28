@@ -89,6 +89,8 @@ public class MessageDao
 	 * 
 	 * @param session_key
 	 *            Session Key
+	 * @param tenant_id
+	 * 			tenant_id	
 	 * @return
 	 */
 	public Long getMaxIndex(String session_key, String tenant_id)

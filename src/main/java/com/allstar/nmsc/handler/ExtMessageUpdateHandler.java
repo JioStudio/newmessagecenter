@@ -10,7 +10,7 @@ import com.allstar.nmsc.util.ResponseCode;
 import com.networknt.body.BodyHandler;
 
 /**
- * update msg_ext column, msg_ext = value
+ * update[clear] msg_ext column, msg_ext = value
  * 
  * @author vincent.ma
  */
@@ -28,8 +28,8 @@ public class ExtMessageUpdateHandler implements HttpHandler
 			String extMap = bodyMap.get("extMap");// name:vincent.ma,age:18
 			String messageIndex = bodyMap.get("messageIndex");
 
-			Assert.notNull(from, "from must be not null.");
 			Assert.notNull(to, "to must be not null.");
+			Assert.notNull(from, "from must be not null.");
 			Assert.notNull(extMap, "extMap must be not null.");
 			Assert.notNull(messageIndex, "messageIndex must be not null.");
 
@@ -41,8 +41,10 @@ public class ExtMessageUpdateHandler implements HttpHandler
 				sessionKey = fromId + "" + toId;
 			else
 				sessionKey = toId + "" + fromId;
-
-			extMap = "{'" + extMap.replaceAll(",", "','").replaceAll(":", "':'") + "'}";
+			
+			if(extMap != null)
+				extMap = "{'" + extMap.replaceAll(",", "','").replaceAll(":", "':'") + "'}";
+			
 			new MessageDao().ExtMessageUpdate(sessionKey, messageIndex, extMap);
 
 			Response resp = new Response(ResponseCode.OK);

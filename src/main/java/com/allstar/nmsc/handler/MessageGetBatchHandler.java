@@ -15,7 +15,7 @@ import io.undertow.server.HttpServerExchange;
 /**
  * get batch messages
  * 
- * @author aminiy
+ * @author vincent.ma
  */
 public class MessageGetBatchHandler implements HttpHandler
 {
@@ -26,14 +26,31 @@ public class MessageGetBatchHandler implements HttpHandler
 		try
 		{
 			HashMap<String, String> bodyMap = (HashMap<String, String>) exchange.getAttachment(BodyHandler.REQUEST_BODY);
-			String senderId = bodyMap.get("from");
-			String receiverId = bodyMap.get("to");
-
-			Assert.notNull(senderId, "sender id must be not null.");
-			Assert.notNull(receiverId, "receiver id must be not null.");
-
+			String from = bodyMap.get("from");
+			String to = bodyMap.get("to");
+			String tenantId = bodyMap.get("tenantId");
+			String startIndex = bodyMap.get("startIndex");
+			String count = bodyMap.get("count");// want get message count
+			
+			Assert.notNull(from, "from must be not null.");
+			Assert.notNull(to, "to must be not null.");
+			Assert.notNull(tenantId, "tenantId must be not null.");
+			Assert.notNull(startIndex, "startIndex must be not null.");
+			Assert.notNull(count, "count must be not null.");
+			
+			String sessionKey;
+			long fromId = Long.valueOf(from);
+			long toId = Long.valueOf(to);
+			if(fromId > toId)
+			{
+				sessionKey = fromId + "" + toId;
+			}
+			else
+			{	
+				sessionKey = toId + "" + fromId;
+			}
 			JSONObject resp = new JSONObject();
-			List<MessageEntity> entityList = new MessageDao().findMessageListBySessionKey(MessageEntity.getSessionKey(senderId, receiverId));
+			List<MessageEntity> entityList = new MessageDao().findHistoryMessages(sessionKey, tenantId, Long.parseLong(startIndex), Long.parseLong(count));
 			if (entityList != null)
 			{
 				for (MessageEntity entity : entityList)

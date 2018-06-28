@@ -228,7 +228,13 @@
 		    <groupId>com.alibaba</groupId>
 		    <artifactId>fastjson</artifactId>
 		    <version>1.2.47</version>
-		</dependency>		
+		</dependency>
+		<dependency>
+		    <groupId>com.allstar</groupId>
+		    <artifactId>cincommon</artifactId>
+		    <version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		
     </dependencies>
 
 
