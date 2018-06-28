@@ -48,11 +48,11 @@ public class SessionInfoDao
 		}
 		else if (1 < last_index)
 		{
-			String senderCql = "UPDATE rcs_session_info SET last_index=" + last_index + " WHERE receiver_id=" + sender_id + " AND sender_id=" + receiver_id;
-			String receiverCql = "UPDATE rcs_session_info SET last_index=" + last_index + " WHERE receiver_id=" + receiver_id + " AND sender_id=" + sender_id;
+			String senderCql = "UPDATE rcs_session_info SET last_index=%s WHERE receiver_id=%s AND sender_id=%s";
+			String receiverCql = "UPDATE rcs_session_info SET last_index=%s WHERE receiver_id=%s AND sender_id=%s";
 
-			op.getCqlOperations().execute(senderCql);
-			op.getCqlOperations().execute(receiverCql);
+			op.getCqlOperations().execute(String.format(senderCql, last_index, sender_id, receiver_id));
+			op.getCqlOperations().execute(String.format(receiverCql, last_index, receiver_id, sender_id));
 		}
 	}
 }

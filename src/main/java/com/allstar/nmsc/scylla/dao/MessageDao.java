@@ -10,6 +10,7 @@ import org.springframework.data.cassandra.core.query.Query;
 
 import com.allstar.nmsc.scylla.connector.ScyllaConnector;
 import com.allstar.nmsc.scylla.repository.MessageEntity;
+import com.allstar.nmsc.scylla.repository.MessageIDEntity;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.exceptions.DriverException;
 
@@ -22,11 +23,128 @@ import com.datastax.driver.core.exceptions.DriverException;
 public class MessageDao
 {
 
-	public void delSingleMessage(long operator_id, String session_key, long msg_index)
+	/**
+	 * Insert message to DB when send message
+	 * 
+	 * @param msg
+	 *            Message Entity
+	 */
+	public void insertMessage(MessageEntity msg)
+	{
+		CassandraOperations op = ScyllaConnector.instance().getTemplate();
+		MessageIDEntity idIndex = new MessageIDEntity(msg.getSession_key(), msg.getTenant_id(), msg.getMessage_id(), msg.getMessage_index());
+		op.batchOps().insert(msg, idIndex).execute();
+	}
+
+	/**
+	 * Select message entity according to message index
+	 * 
+	 * @param session_key
+	 *            Session Key
+	 * @param tenant_id
+	 *            Tenant ID
+	 * @param message_id
+	 *            Message ID
+	 * @return
+	 */
+	public MessageEntity findMessageByMsgId(String session_key, String tenant_id, String message_id)
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
 
-		MessageEntity m = findMessageByMsgIndex(session_key, msg_index);
+		// Get message index by message id
+		MessageIDEntity idIndex = op.selectOne(Query.query(Criteria.where("session_key").is(session_key), Criteria.where("tenant_id").is(tenant_id), Criteria.where("msg_id").is(message_id)),
+				MessageIDEntity.class);
+
+		if (null != idIndex)
+		{
+			// get message by message index
+			return findMessageByMsgIndex(session_key, tenant_id, idIndex.getMessage_index());
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	/**
+	 * Select message entity according to message index
+	 * 
+	 * @param session_key
+	 *            Session Key
+	 * @param tenant_id
+	 *            Tenant ID
+	 * @param msg_index
+	 *            Message Index
+	 * @return
+	 */
+	public MessageEntity findMessageByMsgIndex(String session_key, String tenant_id, long msg_index)
+	{
+		CassandraOperations op = ScyllaConnector.instance().getTemplate();
+
+		return op.selectOne(Query.query(Criteria.where("session_key").is(session_key), Criteria.where("tenant_id").is(tenant_id), Criteria.where("msg_index").is(msg_index)), MessageEntity.class);
+	}
+
+	/**
+	 * Get current max message index of conversation
+	 * 
+	 * @param session_key
+	 *            Session Key
+	 * @return
+	 */
+	public Long getMaxIndex(String session_key, String tenant_id)
+	{
+		CassandraOperations op = ScyllaConnector.instance().getTemplate();
+		RowMapper<Long> mapper = new RowMapper<Long>()
+		{
+			@Override
+			public Long mapRow(Row row, int rowNum) throws DriverException
+			{
+				return row.getLong(0);
+			}
+		};
+
+		String cql = "SELECT MAX(msg_index) FROM rcs_message WHERE session_key ='%s' AND tenant_id='%s'";
+		List<Long> list = op.getCqlOperations().query(String.format(cql, session_key, tenant_id), mapper);
+
+		if (list != null && list.size() > 0)
+			return list.get(0);
+		else
+			return 0L;
+	}
+
+	/**
+	 * Select history messages according message index
+	 * 
+	 * @param session_key
+	 *            Session Key
+	 * @param tenant_id
+	 *            Tenant ID
+	 * @param start_index
+	 *            Query start Index
+	 * @param number
+	 *            How many message records to get
+	 * @return
+	 */
+	public List<MessageEntity> findHistoryMessages(String session_key, String tenant_id, long start_index, long number)
+	{
+		CassandraOperations op = ScyllaConnector.instance().getTemplate();
+		long end_index = start_index - number + 1;
+		if (end_index < 0)
+		{
+			end_index = 0;
+		}
+		String cql = "SELECT * FROM rcs_message WHERE session_key='%s' AND tenant_id='%s' AND msg_index <= %s AND msg_index >=%s";
+
+		return op.select(String.format(cql, session_key, tenant_id, start_index, end_index), MessageEntity.class);
+	}
+
+	// --- Below method not implement and test till now
+
+	public void delSingleMessage(long operator_id, String session_key, String tenant_id, long msg_index)
+	{
+		CassandraOperations op = ScyllaConnector.instance().getTemplate();
+
+		MessageEntity m = findMessageByMsgIndex(session_key, tenant_id, msg_index);
 		if (null != m)
 		{
 			if (session_key.startsWith(String.valueOf(operator_id)))
@@ -39,11 +157,11 @@ public class MessageDao
 		}
 	}
 
-	public void delSingleMessage(long operator_id, String session_key, String message_id)
+	public void delSingleMessage(long operator_id, String session_key, String tenant_id, String message_id)
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
 
-		MessageEntity m = findMessageByMsgId(session_key, message_id);
+		MessageEntity m = findMessageByMsgId(session_key, tenant_id, message_id);
 		if (null != m)
 		{
 			if (session_key.startsWith(String.valueOf(operator_id)))
@@ -56,11 +174,11 @@ public class MessageDao
 		}
 	}
 
-	public void updateMessageStatus(String session_key, String message_id)
+	public void updateMessageStatus(String session_key, String tenant_id, String message_id)
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
 
-		MessageEntity m = findMessageByMsgId(session_key, message_id);
+		MessageEntity m = findMessageByMsgId(session_key, tenant_id, message_id);
 		if (null != m)
 		{
 			m.setMessage_status(0);
@@ -68,30 +186,16 @@ public class MessageDao
 		}
 	}
 
-	public void updateMessage4JioMoney(String session_key, String message_id, String message_content)
+	public void updateMessage4JioMoney(String session_key, String tenant_id, String message_id, String message_content)
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
 
-		MessageEntity m = findMessageByMsgId(session_key, message_id);
+		MessageEntity m = findMessageByMsgId(session_key, tenant_id, message_id);
 		if (null != m)
 		{
-			m.setMessage_content(message_content); // ByteBuffer.wrap(message_content)
+			m.setMessage_content(message_content);
 			op.update(m);
 		}
-	}
-
-	public MessageEntity findMessageByMsgId(String session_key, String message_id)
-	{
-		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-
-		return op.selectOne(Query.query(Criteria.where("session_key").is(session_key), Criteria.where("msg_id").is(message_id)), MessageEntity.class);
-	}
-
-	public MessageEntity findMessageByMsgIndex(String session_key, long msg_index)
-	{
-		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-
-		return op.selectOne(Query.query(Criteria.where("session_key").is(session_key), Criteria.where("msg_index").is(msg_index)), MessageEntity.class);
 	}
 
 	public List<Integer> findUnDeliveryMsgIndexes(long requester_id, String session_key)
@@ -117,58 +221,6 @@ public class MessageDao
 		}
 
 		return indexes;
-	}
-
-	public void insertMessage(MessageEntity msg)
-	{
-		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		op.insert(msg);
-	}
-
-	public MessageEntity findMessageBySessionKey(String sessionKey)
-	{
-		System.out.println("test method is called.");
-		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		// List<MessageEntity> list = op.select(Query.empty(),
-		// MessageEntity.class);
-		// if(list!=null){
-		// System.out.println(list.size());
-		// }
-
-		// test max
-		// Select select =
-		// QueryBuilder.select().max("msg_index").from("rcs_message");//
-		// where...
-		// Long count = op.getCqlOperations().queryForObject(select,
-		// Long.class);
-		// System.out.println("----->>Count=" + count);
-
-		// spring count method
-		// Select select = QueryBuilder.select().countAll().from("");
-		// Long count = getCqlOperations().queryForObject(select, Long.class);
-		// return
-		// getCqlOperations().queryForResultSet(select).iterator().hasNext();
-
-		return op.selectOne(Query.query(Criteria.where("session_key").is(sessionKey)), MessageEntity.class);
-	}
-
-	public Long getMaxIndex(String sessionKey)
-	{
-		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		RowMapper<Long> mapper = new RowMapper<Long>()
-		{
-			@Override
-			public Long mapRow(Row row, int rowNum) throws DriverException
-			{
-				return row.getLong(0);
-			}
-		};
-		List<Long> list = op.getCqlOperations().query("SELECT MAX(msg_index) FROM rcs_message WHERE session_key ='" + sessionKey + "'", mapper);
-
-		if (list != null && list.size() > 0)
-			return list.get(0);
-		else
-			return 0L;
 	}
 
 	/**
@@ -202,5 +254,4 @@ public class MessageDao
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
 		op.getCqlOperations().execute("UPDATE rcs_message set msg_ext = msg_ext - " + extKey + " WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
 	}
-
 }

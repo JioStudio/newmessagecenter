@@ -16,7 +16,10 @@ public class MessageEntity
 	@PrimaryKeyColumn(name = "session_key", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
 	private String session_key;
 
-	@PrimaryKeyColumn(name = "msg_index", ordinal = 1, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
+	@PrimaryKeyColumn(name = "tenant_id", ordinal = 1, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
+	private String tenant_id;
+
+	@PrimaryKeyColumn(name = "msg_index", ordinal = 2, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
 	private long message_index;
 
 	@Column(value = "sender_id")
@@ -86,6 +89,16 @@ public class MessageEntity
 	public String getSession_key()
 	{
 		return session_key;
+	}
+
+	public String getTenant_id()
+	{
+		return tenant_id;
+	}
+
+	public void setTenant_id(String tenant_id)
+	{
+		this.tenant_id = tenant_id;
 	}
 
 	public void setSession_key(String session_key)
