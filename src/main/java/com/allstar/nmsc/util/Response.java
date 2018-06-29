@@ -29,11 +29,11 @@ public class Response
 		resp.put("msg", ResponseCode.OK.getName());
 	}
 
-	public void put(String key, Object value) throws Exception
+	public void put(String key, Object value)
 	{
 		Assert.notNull(key, "key must be not null.");
 		if (key.equalsIgnoreCase("respcode") || key.equalsIgnoreCase("msg"))
-			throw new Exception("key must be not 'respcode' or 'msg'.");
+			System.out.println("-->Error: when build response, key must be not 'respcode' or 'msg'.");
 
 		resp.put(key, value);
 	}

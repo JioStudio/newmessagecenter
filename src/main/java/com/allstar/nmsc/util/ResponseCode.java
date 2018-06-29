@@ -7,7 +7,7 @@ package com.allstar.nmsc.util;
  */
 public enum ResponseCode
 {
-	OK("ok", 1), ERROR("error", 2), NotExists("not exists", 3), Exception("exception", 4);
+	OK("ok", 1), ERROR("error", 2), NotExists("not exists", 3), Exception("exception", 4), NotFound("not found", 5);
 
 	private int index;
 	private String name;

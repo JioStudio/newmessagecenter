@@ -12,6 +12,7 @@ import com.networknt.body.BodyHandler;
 /**
  * All ExtMessage...Handler is operation on msg_ext column. msg_ext=msg_ext-key
  * 
+ * @since 2018-06-29
  * @author vincent.ma
  */
 public class ExtMessageRemoveHandler implements HttpHandler

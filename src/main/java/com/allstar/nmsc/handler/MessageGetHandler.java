@@ -14,7 +14,8 @@ import com.networknt.body.BodyHandler;
 /**
  * get one message
  * 
- * @author aminiy
+ * @since 2018-06-29
+ * @author vincent.ma
  */
 public class MessageGetHandler implements HttpHandler
 {
@@ -30,8 +31,8 @@ public class MessageGetHandler implements HttpHandler
 			String tenantId = bodyMap.get("tenantId");
 			String messageIndex = bodyMap.get("messageIndex");
 
-			Assert.notNull(sender_id, "sender id must be not null.");
-			Assert.notNull(receiver_id, "receiver id must be not null.");
+			Assert.notNull(sender_id, "from must be not null.");
+			Assert.notNull(receiver_id, "to must be not null.");
 			Assert.notNull(messageIndex, "messageIndex must be not null.");
 			Assert.notNull(tenantId, "tenantId must be not null.");
 

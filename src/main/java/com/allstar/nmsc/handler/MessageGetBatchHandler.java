@@ -1,20 +1,20 @@
 package com.allstar.nmsc.handler;
 
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
 import java.util.HashMap;
 import java.util.List;
 import org.springframework.util.Assert;
-import com.alibaba.fastjson.JSONObject;
 import com.allstar.nmsc.scylla.dao.MessageDao;
 import com.allstar.nmsc.scylla.repository.MessageEntity;
 import com.allstar.nmsc.util.Response;
 import com.allstar.nmsc.util.ResponseCode;
 import com.networknt.body.BodyHandler;
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
 
 /**
  * get batch messages
  * 
+ * @since 2018-06-29
  * @author vincent.ma
  */
 public class MessageGetBatchHandler implements HttpHandler
@@ -49,27 +49,11 @@ public class MessageGetBatchHandler implements HttpHandler
 			{	
 				sessionKey = toId + "" + fromId;
 			}
-			JSONObject resp = new JSONObject();
+			
 			List<MessageEntity> entityList = new MessageDao().findHistoryMessages(sessionKey, tenantId, Long.parseLong(startIndex), Long.parseLong(count));
-			if (entityList != null)
-			{
-				for (MessageEntity entity : entityList)
-				{
-					JSONObject message = new JSONObject();
-					message.put("sessionKey", entity.getSession_key());
-					message.put("messageId", entity.getMessage_id());
-					message.put("messageIndex", entity.getMessage_index());
-					message.put("messageStatus", entity.getMessage_status());
-					message.put("senderId", entity.getSender_id());
-					message.put("receiverId", entity.getReceiver_id());
-					message.put("message", entity.getMessage_content());
-
-					resp.put("message", message);
-				}
-			}
 
 			Response response = new Response(ResponseCode.OK);
-			response.put("resp", resp);
+			response.put("resp", entityList);
 			exchange.getResponseSender().send(response.toString());
 		}
 		catch (Exception e)
@@ -81,5 +65,5 @@ public class MessageGetBatchHandler implements HttpHandler
 		}
 		exchange.endExchange();
 	}
-
+	
 }

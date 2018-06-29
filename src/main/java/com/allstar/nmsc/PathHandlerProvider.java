@@ -6,6 +6,7 @@ import io.undertow.server.RoutingHandler;
 import io.undertow.util.Methods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.allstar.cinutil.CinCommonHelper;
 import com.allstar.nmsc.handler.ExtMessageAppendHandler;
 import com.allstar.nmsc.handler.ExtMessageRemoveHandler;
 import com.allstar.nmsc.handler.ExtMessageUpdateHandler;
@@ -19,6 +20,7 @@ import com.networknt.server.HandlerProvider;
 /**
  * Initialize Http request path router table, CinCommonHelper
  * 
+ * @since 2018-06-29
  * @author vincent.ma
  */
 public class PathHandlerProvider implements HandlerProvider
@@ -30,7 +32,7 @@ public class PathHandlerProvider implements HandlerProvider
 	{
 		try
 		{
-//			CinCommonHelper.Initialize();
+			CinCommonHelper.Initialize();
 			logger.info("--- initialize http request path router table OK---");
 			System.out.println("--- initialize http request path router table OK---");
 			RoutingHandler handler = Handlers.routing()

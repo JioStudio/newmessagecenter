@@ -14,6 +14,7 @@ import com.networknt.body.BodyHandler;
  * interface is append to msg_ext column: msg_ext=msg_ext+value(like:
  * {'key1':'value1','key2':'vaue2'})
  * 
+ * @since 2018-06-29
  * @author vincent.ma
  */
 public class ExtMessageAppendHandler implements HttpHandler

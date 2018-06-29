@@ -5,7 +5,6 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
 import java.util.HashMap;
 import org.springframework.util.Assert;
-import com.alibaba.fastjson.JSONObject;
 import com.allstar.nmsc.scylla.dao.MessageDao;
 import com.allstar.nmsc.util.Response;
 import com.allstar.nmsc.util.ResponseCode;
@@ -14,8 +13,8 @@ import com.networknt.body.BodyHandler;
 /**
  * update message status
  * 
+ * @since 2018-06-29
  * @author vincent.ma
- *
  */
 public class MessageSessionUpdateHandler implements HttpHandler
 {
@@ -57,11 +56,8 @@ public class MessageSessionUpdateHandler implements HttpHandler
 		{
 			e.printStackTrace();
 
-			JSONObject response = new JSONObject();
-			response.put("respcode", 2);
-			response.put("msg", e.getMessage());
-
-			exchange.getResponseSender().send(response.toJSONString());
+			Response response  = new Response(ResponseCode.ERROR);
+			exchange.getResponseSender().send(response.toString());
 		}
 		exchange.endExchange();
 	}

@@ -12,6 +12,7 @@ import com.networknt.body.BodyHandler;
 /**
  * update[clear] msg_ext column, msg_ext = value
  * 
+ * @since 2018-06-29
  * @author vincent.ma
  */
 public class ExtMessageUpdateHandler implements HttpHandler
