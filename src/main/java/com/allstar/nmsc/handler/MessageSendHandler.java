@@ -28,7 +28,7 @@ import com.networknt.body.BodyHandler;
 
 /**
  * 
- * P2P message, A send message to B with http request, extMap: optional,
+ * A send message to B with http request, extMap: optional,
  * key1:value1,key2:value2... all extend property are save in msg_txt column
  * 
  * @since 2018-06-29
@@ -53,7 +53,7 @@ public class MessageSendHandler implements HttpHandler
 			
 			String credential = bodyMap.get("credential");
 			String fpId = bodyMap.get("fpId");
-			String type = bodyMap.get("type");
+			String type = bodyMap.get("type");// message type
 			String encrypt = bodyMap.get("encrypt");
 			
 			Assert.notNull(to, "to must be not null.");
@@ -201,6 +201,7 @@ public class MessageSendHandler implements HttpHandler
 		{
 			e.printStackTrace();
 			Response resp = new Response(ResponseCode.ERROR);
+			resp.appendMsg(e.getMessage());
 			exchange.getResponseSender().send(resp.toString());
 		}
 		exchange.endExchange();
