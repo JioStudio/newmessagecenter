@@ -61,7 +61,7 @@
          "/getbatchmessage": {
         	"post":{}
         },
-        "/addmessage": {
+        "/sendmessage": {
         	"post":{}
         },
         "/deletemessage": {

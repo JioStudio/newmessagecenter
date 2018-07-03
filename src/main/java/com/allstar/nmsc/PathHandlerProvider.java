@@ -4,8 +4,7 @@ import io.undertow.Handlers;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.RoutingHandler;
 import io.undertow.util.Methods;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import com.allstar.cinutil.CinCommonHelper;
 import com.allstar.nmsc.handler.ExtMessageAppendHandler;
 import com.allstar.nmsc.handler.ExtMessageRemoveHandler;
@@ -24,8 +23,6 @@ import com.networknt.server.HandlerProvider;
  */
 public class PathHandlerProvider implements HandlerProvider
 {
-	static final Logger logger = LoggerFactory.getLogger(PathHandlerProvider.class);
-
 	@Override
 	public HttpHandler getHandler()
 	{
@@ -48,7 +45,6 @@ public class PathHandlerProvider implements HandlerProvider
 		{
 			e.printStackTrace();
 			
-			logger.error("--- initialize http request path router table Exception---" + e.getMessage());
 			System.out.println("--- initialize http request path router table Exception---" + e.getMessage());
 		}
 		return null;

@@ -2,9 +2,12 @@ package com.allstar.nmsc.handler;
 
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.util.Assert;
+
 import com.alibaba.fastjson.JSONObject;
 import com.allstar.cinconnection.CinStack;
 import com.allstar.cinrouter.CinRouter;
@@ -18,6 +21,8 @@ import com.allstar.cintransaction.cinmessage.CinRequest;
 import com.allstar.cintransaction.cinmessage.CinRequestMethod;
 import com.allstar.cintransaction.cinmessage.CinResponse;
 import com.allstar.cintransaction.cinmessage.CinResponseCode;
+import com.allstar.cinutil.CinConvert;
+import com.allstar.event.CinMessageEvent;
 import com.allstar.nmsc.scylla.dao.MessageDao;
 import com.allstar.nmsc.scylla.dao.SessionInfoDao;
 import com.allstar.nmsc.scylla.repository.MessageEntity;
@@ -52,9 +57,11 @@ public class MessageSendHandler implements HttpHandler
 			String tenantId = bodyMap.get("tenantId");
 			
 			String credential = bodyMap.get("credential");
-			String fpId = bodyMap.get("fpId");
+			String fpId = bodyMap.get("fpId");// hexString: 0A878C7617B20000016170429C090000017E0100000000017FAD
 			String type = bodyMap.get("type");// message type
 			String encrypt = bodyMap.get("encrypt");
+			String status = bodyMap.get("status");// neng li zhi
+			String version = bodyMap.get("version");// optional 
 			
 			Assert.notNull(to, "to must be not null.");
 			Assert.notNull(from, "from must be not null.");
@@ -66,35 +73,35 @@ public class MessageSendHandler implements HttpHandler
 			long senderId = Long.valueOf(from);
 			long receiverId = Long.valueOf(to);
 
-			CinRequest request = new CinRequest(CinRequestMethod.InnerService);
+//			CinRequest request = new CinRequest(CinRequestMethod.InnerService);
 //			request.addHeader(new CinHeader(CinHeaderType.Event, CinInnerServiceEvent.CheckCredential));// TODO to be add in cincommon
-			request.addHeader(new CinHeader(CinHeaderType.From, senderId));
-			request.addHeader(new CinHeader(CinHeaderType.Fpid, from));
-			request.addHeader(new CinHeader(CinHeaderType.Type, type));
-			request.addHeader(new CinHeader(CinHeaderType.Credential, credential));
-			CinRouter.setRoute(request, CinServiceName.UserCacheCenter);
-			CinTransaction tran = CinStack.instance().createTransaction(request);
-			tran.TransactionEvent = new CinTransactionEvent() {
-
-				@Override
-				public void onTimeout(CinTransaction trans)
-				{
-				}
-
-				@Override
-				public void onSendFailed(CinTransaction trans)
-				{
-					Response resp = new Response(ResponseCode.ERROR);
-					exchange.getResponseSender().send(resp.toString());
-				}
-
-				@Override
-				public void onResponseReceived(CinTransaction trans, CinResponse response)
-				{
-					if (response.isResponseCode(CinResponseCode.OK))
-					{
-						try
-						{
+//			request.addHeader(new CinHeader(CinHeaderType.From, senderId));
+//			request.addHeader(new CinHeader(CinHeaderType.Fpid, from));
+//			request.addHeader(new CinHeader(CinHeaderType.Type, type));
+//			request.addHeader(new CinHeader(CinHeaderType.Credential, credential));
+//			CinRouter.setRoute(request, CinServiceName.UserCacheCenter);
+//			CinTransaction tran = CinStack.instance().createTransaction(request);
+//			tran.TransactionEvent = new CinTransactionEvent() {
+//
+//				@Override
+//				public void onTimeout(CinTransaction trans)
+//				{
+//				}
+//
+//				@Override
+//				public void onSendFailed(CinTransaction trans)
+//				{
+//					Response resp = new Response(ResponseCode.ERROR);
+//					exchange.getResponseSender().send(resp.toString());
+//				}
+//
+//				@Override
+//				public void onResponseReceived(CinTransaction trans, CinResponse response)
+//				{
+//					if (response.isResponseCode(CinResponseCode.OK))
+//					{
+//						try
+//						{
 							// 1. save message to ScyllaDB
 							Map<String, String> map_ext = new HashMap<String, String>();
 							if (extMap != null && !extMap.equals(""))
@@ -112,90 +119,103 @@ public class MessageSendHandler implements HttpHandler
 							entity.setMessage_content(message);
 							entity.setGroup_sender(Long.valueOf(groupId));
 							entity.setMsg_ext(map_ext);
-
+							entity.setTenant_id(tenantId);
+							
 							long maxIndex = new MessageDao().getMaxIndex(entity.getSession_key(), tenantId);
 							long last_index = maxIndex + 1;
 							entity.setMessage_index(last_index);
 
 							new MessageDao().insertMessage(entity);
-							new SessionInfoDao().updateSessionInfo(senderId, receiverId, last_index);
-
+							new SessionInfoDao().updateSessionInfo(senderId, receiverId, last_index, tenantId);
+							
 							// 2. send message to MSC with DirectSendRequestHandler way
-							CinRequest request = new CinRequest(CinRequestMethod.Notify);// to be add as MessageEvent
-							request.addHeader(new CinHeader(CinHeaderType.Event, 0x26));// 0x01-0x30 is OK
-							request.addHeader(new CinHeader(CinHeaderType.From, senderId));
-							request.addHeader(new CinHeader(CinHeaderType.To, receiverId));
-							request.addHeader(new CinHeader(CinHeaderType.Fpid, fpId));// optional
-							request.addHeader(new CinHeader(CinHeaderType.Type, type));// messageType
-							
-							if(encrypt!=null)
-								request.addHeader(new CinHeader(CinHeaderType.Encrypt, encrypt));
-							if(extMap!=null)
-								request.addHeader(new CinHeader(CinHeaderType.Index, extMap));
-							
-							request.addBody(new CinBody(message));// TODO should be add bodys
-							CinRouter.setRoute(request, CinServiceName.MessageCenter);
-							CinTransaction tran = CinStack.instance().createTransaction(request);
-							tran.TransactionEvent = new CinTransactionEvent() {
-								@Override
-								public void onTimeout(CinTransaction trans)
-								{
-								}
-								
-								@Override
-								public void onSendFailed(CinTransaction trans)
-								{
-									Response resp = new Response(ResponseCode.ERROR);
-									exchange.getResponseSender().send(resp.toString());
-								}
-								
-								@Override
-								public void onResponseReceived(CinTransaction trans, CinResponse response)
-								{
-									// 3. send response
-									if(response.isResponseCode(CinResponseCode.OK))
-									{
-										try
-										{
-											JSONObject resp = new JSONObject();
-											resp.put("messageIndex", last_index);
-
-											Response r = new Response(ResponseCode.OK);
-											r.put("resp", resp);
-											exchange.getResponseSender().send(r.toString());
-										}
-										catch (Exception e)
-										{
-											e.printStackTrace();
-											Response resp = new Response(ResponseCode.ERROR);
-											exchange.getResponseSender().send(resp.toString());
-										}
-									}
-									else
-									{
-										Response resp = new Response(ResponseCode.ERROR);
-										exchange.getResponseSender().send(resp.toString());
-									}
-								}
-							};
-							tran.SendRequest();
-						}
-						catch (Exception e)
-						{
-							e.printStackTrace();
-							Response resp = new Response(ResponseCode.ERROR);
+							Response resp = new Response(ResponseCode.OK);
 							exchange.getResponseSender().send(resp.toString());
-						}
-					}
-					else
-					{
-						Response resp = new Response(ResponseCode.ERROR);
-						resp.appendMsg("check credential failed.");
-						exchange.getResponseSender().send(resp.toString());
-					}
-				}
-			};
-			tran.SendRequest();
+
+							sendMessage(buildCinRequest(), exchange);
+							
+							
+//							CinRequest request = new CinRequest(CinRequestMethod.Message);// to be add as MessageEvent
+//							request.addHeader(new CinHeader(CinHeaderType.Event, CinMessageEvent.Message));// 0x01-0x30 is OK
+//							request.addHeader(new CinHeader(CinHeaderType.From, senderId));
+//							request.addHeader(new CinHeader(CinHeaderType.To, receiverId));
+//							if(fpId!=null && !fpId.equals(""))
+//								request.addHeader(new CinHeader(CinHeaderType.Fpid, CinConvert.hexToBytes(fpId)));// optional
+//							request.addHeader(new CinHeader(CinHeaderType.MessageID, messageId));
+//							request.addHeader(new CinHeader(CinHeaderType.Type, type));// messageType
+//							request.addHeader(new CinHeader(CinHeaderType.Status, status));
+//							if(version != null && !version.equals(""))
+//								request.addHeader(new CinHeader(CinHeaderType.Version, version));
+//							if(encrypt != null)
+//								request.addHeader(new CinHeader(CinHeaderType.Encrypt, encrypt));
+////							if(extMap != null)
+////								request.addHeader(new CinHeader(CinHeaderType.Index, extMap));// extend property, to be confirm
+//							
+//							request.addBody(new CinBody(message));// TODO should be add bodys
+//							CinRouter.setRoute(request, CinServiceName.MessageCenter);
+//							CinTransaction tran = CinStack.instance().createTransaction(request);
+//							tran.TransactionEvent = new CinTransactionEvent() {
+//								@Override
+//								public void onTimeout(CinTransaction trans)
+//								{
+//								}
+//								
+//								@Override
+//								public void onSendFailed(CinTransaction trans)
+//								{
+//									Response resp = new Response(ResponseCode.ERROR);
+//									exchange.getResponseSender().send(resp.toString());
+//								}
+//								
+//								@Override
+//								public void onResponseReceived(CinTransaction trans, CinResponse response)
+//								{
+//									// 3. send response
+//									if(response.isResponseCode(CinResponseCode.OK))
+//									{
+//										try
+//										{
+//											JSONObject resp = new JSONObject();
+//											resp.put("messageIndex", last_index);
+//											resp.put("dateTime", System.currentTimeMillis());
+//
+//											Response r = new Response(ResponseCode.OK);
+//											r.put("resp", resp);
+//											exchange.getResponseSender().send(r.toString());
+//										}
+//										catch (Exception e)
+//										{
+//											e.printStackTrace();
+//											Response resp = new Response(ResponseCode.ERROR);
+//											exchange.getResponseSender().send(resp.toString());
+//										}
+//									}
+//									else
+//									{
+//										Response resp = new Response(ResponseCode.ERROR);
+//										exchange.getResponseSender().send(resp.toString());
+//									}
+//								}
+//							};
+//							tran.SendRequest();
+							
+//						}
+//						catch (Exception e)
+//						{
+//							e.printStackTrace();
+//							Response resp = new Response(ResponseCode.ERROR);
+//							exchange.getResponseSender().send(resp.toString());
+//						}
+//					}
+//					else
+//					{
+//						Response resp = new Response(ResponseCode.ERROR);
+//						resp.appendMsg("check credential failed.");
+//						exchange.getResponseSender().send(resp.toString());
+//					}
+//				}
+//			};
+//			tran.SendRequest();
 		}
 		catch (Exception e)
 		{
@@ -205,5 +225,57 @@ public class MessageSendHandler implements HttpHandler
 			exchange.getResponseSender().send(resp.toString());
 		}
 		exchange.endExchange();
+	}
+	
+	private CinRequest buildCinRequest()
+	{
+		CinRequest request   = new CinRequest(CinRequestMethod.Notify);
+		request.addHeader(new CinHeader(CinHeaderType.Event, (byte)0x26));// 0x01-0x30 is OK
+		request.addHeader(new CinHeader(CinHeaderType.From, 100001231));
+		request.addHeader(new CinHeader(CinHeaderType.To, 100001441));
+		request.addHeader(new CinHeader(CinHeaderType.MessageID, "EA2CFA165E564D60B9B407E033413E6B"));
+//		request.addHeader(new CinHeader(CinHeaderType.Type, 1));// no type header is text message
+		request.addHeader(new CinHeader(CinHeaderType.Status, 5));
+		request.addBody(new CinBody("server test: it still raining in india"));
+	
+		return request;
+	}
+	
+	private void sendMessage(CinRequest request, HttpServerExchange exchange)
+	{
+		CinRouter.setRoute(request, CinServiceName.MessageCenter);
+		CinTransaction tran = CinStack.instance().createTransaction(request);
+		tran.TransactionEvent = new CinTransactionEvent() {
+
+			@Override
+			public void onResponseReceived(CinTransaction trans, CinResponse response) {
+				if(response.isResponseCode(CinResponseCode.OK))
+				{
+					System.out.print("--------------OK---------");
+					
+//					Response resp = new Response(ResponseCode.OK);
+//					exchange.getResponseSender().send(resp.toString());
+				}
+				else
+				{
+					Response resp = new Response(ResponseCode.ERROR);
+					resp.appendMsg("not ok response from msc");
+					exchange.getResponseSender().send(resp.toString());
+				}
+			}
+
+			@Override
+			public void onSendFailed(CinTransaction trans) {
+				Response resp = new Response(ResponseCode.ERROR);
+				resp.appendMsg("onSendFailed");
+				exchange.getResponseSender().send(resp.toString());
+			}
+
+			@Override
+			public void onTimeout(CinTransaction trans) {
+				// TODO Auto-generated method stub
+			}
+		};
+		tran.SendRequest();
 	}
 }

@@ -6,19 +6,19 @@ import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
 
-@Table(value = "rcs_message_index")
+@Table(value = "http_message_id_index")
 public class MessageIDEntity
 {
 	@PrimaryKeyColumn(name = "session_key", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
 	private String session_key;
 
-	@PrimaryKeyColumn(name = "tenant_id", ordinal = 1, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
+	@PrimaryKeyColumn(name = "tenant_id", ordinal = 1, type = PrimaryKeyType.PARTITIONED)
 	private String tenant_id;
 
 	@PrimaryKeyColumn(name = "msg_id", ordinal = 2, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
 	private String message_id;
 
-	@Column(value = "message_index")
+	@Column(value = "msg_index")
 	private long message_index;
 
 	public MessageIDEntity()
