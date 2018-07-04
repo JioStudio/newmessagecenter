@@ -2,21 +2,21 @@ package com.allstar.nmsc.handler;
 
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.util.Assert;
+
 import com.alibaba.fastjson.JSONObject;
 import com.allstar.cinconnection.CinStack;
 import com.allstar.cinrouter.CinRouter;
 import com.allstar.cinrouter.CinServiceName;
 import com.allstar.cintransaction.CinTransaction;
-import com.allstar.cintransaction.CinTransactionEvent;
 import com.allstar.cintransaction.cinmessage.CinHeader;
 import com.allstar.cintransaction.cinmessage.CinHeaderType;
 import com.allstar.cintransaction.cinmessage.CinRequest;
 import com.allstar.cintransaction.cinmessage.CinRequestMethod;
-import com.allstar.cintransaction.cinmessage.CinResponse;
-import com.allstar.cintransaction.cinmessage.CinResponseCode;
 import com.allstar.cinutil.CinConvert;
 import com.allstar.event.CinInnerServiceEvent;
 import com.allstar.nmsc.scylla.dao.MessageDao;
@@ -47,23 +47,23 @@ public class MessageSendHandler implements HttpHandler
 			String from = bodyMap.get("from");
 			String to = bodyMap.get("to");
 			String messageId = bodyMap.get("messageId");
-			String message = bodyMap.get("message");// CinRequest Message
+			String message = bodyMap.get("message");// CinRequest Message, CinConvert.bytes2String(request.toBytes());
 			String groupId = bodyMap.get("groupId");
 			String extMap = bodyMap.get("extMap");// extend column of message
 			String tenantId = bodyMap.get("tenantId");
 
 //			String credential = bodyMap.get("credential");
 //			String fpId = bodyMap.get("fpId");// 0A878C7617B20000016170429C090000017E0100000000017FAD
-//			String type = bodyMap.get("type");// message type
+//			String messageType = bodyMap.get("type");// no type is text message
 //			String encrypt = bodyMap.get("encrypt");
 //			String status = bodyMap.get("status");// neng li zhi
 //			String version = bodyMap.get("version");// optional
 
 			Assert.notNull(to, "to must be not null.");
 			Assert.notNull(from, "from must be not null.");
-			Assert.notNull(extMap, "extMap must be not null.");
 			Assert.notNull(groupId, "groupId must be not null.");
 			Assert.notNull(message, "message must be not null.");
+			Assert.notNull(tenantId, "tenantId must be not null.");
 			Assert.notNull(messageId, "messageId must be not null.");
 
 			long senderId = Long.valueOf(from);
@@ -141,7 +141,7 @@ public class MessageSendHandler implements HttpHandler
 				exchange.getResponseSender().send(r.toString());
 
 				// 3. cast http message and send it to MSC
-				sendMessage(CinConvert.hexToBytes(message));
+				sendMessage(CinConvert.hexToBytes(message), receiverId);
 			}
 			catch (Exception e)
 			{
@@ -170,39 +170,14 @@ public class MessageSendHandler implements HttpHandler
 		exchange.endExchange();
 	}
 
-	private void sendMessage(byte[] message)
+	private void sendMessage(byte[] message, long to)
 	{
 		CinRequest request  = new CinRequest(CinRequestMethod.InnerService);
 		request.addHeader(new CinHeader(CinHeaderType.Event, CinInnerServiceEvent.SendMessage));
+		request.addHeader(new CinHeader(CinHeaderType.To, to));// for router
 		request.addBody(message);// message is CinRequest-Message Request
 		CinRouter.setRoute(request, CinServiceName.MessageCenter);
 		CinTransaction tran = CinStack.instance().createTransaction(request);
-		tran.TransactionEvent = new CinTransactionEvent() {
-
-			@Override
-			public void onResponseReceived(CinTransaction trans, CinResponse response)
-			{
-				if (response.isResponseCode(CinResponseCode.OK))
-				{
-					// do nothing
-					System.out.println("--------------OK---------");
-				}
-				else
-				{
-					System.out.println("--------------send messge with not ok response code---------");
-				}
-			}
-
-			@Override
-			public void onSendFailed(CinTransaction trans) {
-				System.out.println("--------------send message onSendFailed---------");
-			}
-
-			@Override
-			public void onTimeout(CinTransaction trans) {
-				// TODO Auto-generated method stub
-			}
-		};
 		tran.SendRequest();
 	}
 }
