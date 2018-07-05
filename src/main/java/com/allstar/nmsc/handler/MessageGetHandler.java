@@ -31,26 +31,30 @@ public class MessageGetHandler implements HttpHandler
 			String tenantId = bodyMap.get("tenantId");
 			String startIndex = bodyMap.get("startIndex");
 			String count = bodyMap.get("count");// want get message count
-			
+
 			Assert.notNull(from, "from must be not null.");
 			Assert.notNull(to, "to must be not null.");
 			Assert.notNull(tenantId, "tenantId must be not null.");
 			Assert.notNull(startIndex, "startIndex must be not null.");
-			Assert.notNull(count, "count must be not null.");
+			if (count == null || count.trim().equals(""))
+				count = "20";
+			long number = Long.parseLong(count);
+			if (number > 200)
+				number = 200;
 			
 			String sessionKey;
 			long fromId = Long.valueOf(from);
 			long toId = Long.valueOf(to);
-			if(fromId > toId)
+			if (fromId > toId)
 			{
 				sessionKey = fromId + "" + toId;
 			}
 			else
-			{	
+			{
 				sessionKey = toId + "" + fromId;
 			}
-			
-			List<MessageEntity> entityList = new MessageDao().findHistoryMessages(sessionKey, tenantId, Long.parseLong(startIndex), Long.parseLong(count));
+
+			List<MessageEntity> entityList = new MessageDao().findHistoryMessages(sessionKey, tenantId, Long.parseLong(startIndex), number);
 
 			Response response = new Response(ResponseCode.OK);
 			response.put("resp", entityList);
@@ -61,9 +65,10 @@ public class MessageGetHandler implements HttpHandler
 			e.printStackTrace();
 
 			Response res = new Response(ResponseCode.ERROR);
+			res.appendMsg(e.getMessage());
 			exchange.getResponseSender().send(res.toString());
 		}
 		exchange.endExchange();
 	}
-	
+
 }

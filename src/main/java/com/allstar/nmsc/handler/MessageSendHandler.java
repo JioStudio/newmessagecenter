@@ -53,11 +53,10 @@ public class MessageSendHandler implements HttpHandler
 			String tenantId = bodyMap.get("tenantId");
 
 //			String credential = bodyMap.get("credential");
-//			String fpId = bodyMap.get("fpId");// 0A878C7617B20000016170429C090000017E0100000000017FAD
+//			String deviceId = bodyMap.get("deviceId");
 //			String messageType = bodyMap.get("type");// no type is text message
 //			String encrypt = bodyMap.get("encrypt");
 //			String status = bodyMap.get("status");// neng li zhi
-//			String version = bodyMap.get("version");// optional
 
 			Assert.notNull(to, "to must be not null.");
 			Assert.notNull(from, "from must be not null.");
@@ -75,7 +74,7 @@ public class MessageSendHandler implements HttpHandler
 			// CinInnerServiceEvent.CheckCredential));// TODO to be add in
 			// cincommon
 			// request.addHeader(new CinHeader(CinHeaderType.From, senderId));
-			// request.addHeader(new CinHeader(CinHeaderType.Fpid, from));
+			// request.addHeader(new CinHeader(CinHeaderType.Index, deviceId));
 			// request.addHeader(new CinHeader(CinHeaderType.Type, type));
 			// request.addHeader(new CinHeader(CinHeaderType.Credential,
 			// credential));
@@ -118,8 +117,7 @@ public class MessageSendHandler implements HttpHandler
 				MessageEntity entity = new MessageEntity(senderId, receiverId);
 				entity.setMessage_id(messageId);
 				entity.setMessage_status(MessageConstant.MSG_STATUS_SENT);
-				entity.setMessage_content(message);// message need convert to
-													// text ?
+				entity.setMessage_content(message);// cinMessage hexString
 				entity.setGroup_sender(Long.valueOf(groupId));
 				entity.setMsg_ext(map_ext);
 				entity.setTenant_id(tenantId);
