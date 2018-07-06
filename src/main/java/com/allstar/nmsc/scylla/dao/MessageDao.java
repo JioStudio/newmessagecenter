@@ -36,7 +36,7 @@ public class MessageDao
 		op.batchOps().insert(msg, idIndex).execute();
 	}
 
-	/**
+	/*
 	 * Select message entity according to message index
 	 * 
 	 * @param session_key
@@ -66,7 +66,7 @@ public class MessageDao
 		}
 	}
 
-	/**
+	/*
 	 * Select message entity according to message index
 	 * 
 	 * @param session_key
@@ -84,7 +84,7 @@ public class MessageDao
 		return op.selectOne(Query.query(Criteria.where("session_key").is(session_key), Criteria.where("tenant_id").is(tenant_id), Criteria.where("msg_index").is(msg_index)), MessageEntity.class);
 	}
 
-	/**
+	/*
 	 * Get current max message index of conversation
 	 * 
 	 * @param session_key
@@ -114,7 +114,7 @@ public class MessageDao
 			return 0L;
 	}
 
-	/**
+	/*
 	 * Select history messages according message index
 	 * 
 	 * @param session_key

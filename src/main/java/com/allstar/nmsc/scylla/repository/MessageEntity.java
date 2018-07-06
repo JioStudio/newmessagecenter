@@ -12,10 +12,10 @@ import org.springframework.data.cassandra.core.mapping.Table;
 @Table(value = "http_message")
 public class MessageEntity
 {
-
 	@PrimaryKeyColumn(name = "session_key", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
 	private String session_key;
 
+	/* like: tenant_jiochat */
 	@PrimaryKeyColumn(name = "tenant_id", ordinal = 1, type = PrimaryKeyType.PARTITIONED)
 	private String tenant_id;
 
@@ -34,21 +34,27 @@ public class MessageEntity
 	@Column(value = "msg_id")
 	private String message_id;
 
+	/* message value is a CinMessage */
 	@Column(value = "msg_content")
 	private String message_content;
-
+	
+	/* 0:has sent; 1:has delivery */
 	@Column(value = "msg_status")
 	private int message_status;
 
+	/* message send time */
 	@Column(value = "msg_time")
 	private Date message_time;
 
+	/* message delete flag, 0:not delete;1:delete, min user id */
 	@Column(value = "delflag_min")
 	private int delflag_min;
 
+	/* message delete flag, 0:not delete;1:delete, max user id */
 	@Column(value = "delflag_max")
 	private int delflag_max;
 
+	/* message extend column */
 	@Column(value = "msg_ext")
 	private Map<String, String> msg_ext;
 

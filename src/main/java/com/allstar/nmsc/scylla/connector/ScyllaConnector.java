@@ -32,28 +32,23 @@ public class ScyllaConnector {
 
 		PoolingOptions poolingOptions = new PoolingOptions();
 
-		// 每个连接的最大请求数,并发数,32 ;
-		poolingOptions.setMaxRequestsPerConnection(HostDistance.LOCAL,
-				Integer.valueOf(scyllaConfig.get("cassandra.maxrequestsperconnection")));
+		// every connection max current count 32
+		poolingOptions.setMaxRequestsPerConnection(HostDistance.LOCAL, Integer.valueOf(scyllaConfig.get("cassandra.maxrequestsperconnection")));
 
-		// 表示和集群里的每个节点机器至少有2个连接 最多有4个连接
-		poolingOptions.setCoreConnectionsPerHost(HostDistance.LOCAL,
-				Integer.valueOf(scyllaConfig.get("cassandra.coreconnectionsperhost")));
-		poolingOptions.setMaxConnectionsPerHost(HostDistance.LOCAL,
-				Integer.valueOf(scyllaConfig.get("cassandra.maxconnectionsperhost")));
+		// connection to every node, at least 2 connection, at most 4 connection
+		poolingOptions.setCoreConnectionsPerHost(HostDistance.LOCAL, Integer.valueOf(scyllaConfig.get("cassandra.coreconnectionsperhost")));
+		poolingOptions.setMaxConnectionsPerHost(HostDistance.LOCAL, Integer.valueOf(scyllaConfig.get("cassandra.maxconnectionsperhost")));
 
-		// addContactPoints:cassandra节点ip withPort:cassandra节点端口 默认9042
-		// withCredentials:cassandra用户名密码
-		// 如果cassandra.yaml里authenticator：AllowAllAuthenticator 可以不用配置
+		// addContactPoints:cassandra node IP withPort:cassandra, default is 9042
+		// withCredentials:cassandra,username/password
+		//if cassandra.yaml file authenticator:AllowAllAuthenticator, you can not configure this
 		_cluster = Cluster.builder().addContactPoints(scyllaConfig.get("cassandra.contactpoints"))
 				.withPort(Integer.valueOf(scyllaConfig.get("cassandra.port")))
 				.withCredentials(scyllaConfig.get("cassandra.username"), scyllaConfig.get("cassandra.password"))
 				.withPoolingOptions(poolingOptions).build();
 
-		// 建立连接
-		// session = cluster.connect("test");连接已存在的键空间
+		// build connection
 		_session = _cluster.connect(scyllaConfig.get("cassandra.keyspace"));
-
 		_scyllaOperations = new CassandraTemplate(_session);
 	}
 
