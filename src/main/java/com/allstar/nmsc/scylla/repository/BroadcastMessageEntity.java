@@ -15,14 +15,18 @@ public class BroadcastMessageEntity
 	@PrimaryKeyColumn(name = "sender_id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
 	private long sender_id;
 
-	@PrimaryKeyColumn(name = "msg_index", ordinal = 1, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
-	private long msg_index;
-
-	@Column(value = "msg_id")
+	/* like: tenant_jiochat */
+	@PrimaryKeyColumn(name = "tenant_id", ordinal = 1, type = PrimaryKeyType.PARTITIONED)
+	private String tenant_id;
+	
+	@PrimaryKeyColumn(name = "msg_id", ordinal = 2, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
 	private String msg_id;
 
 	@Column(value = "msg_content")
 	private String msg_content;
+
+	@Column(value = "msg_index")
+	private long msg_index;
 
 	@Column(value = "msg_time")
 	private Date msg_time;

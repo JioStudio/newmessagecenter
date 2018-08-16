@@ -14,8 +14,12 @@ public class OfflineNotifyEntity
 
 	@PrimaryKeyColumn(name = "receiver_id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
 	private long receiver_id;
-
-	@PrimaryKeyColumn(name = "notify_index", ordinal = 1, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
+	
+	/* like: tenant_jiochat */
+	@PrimaryKeyColumn(name = "tenant_id", ordinal = 1, type = PrimaryKeyType.PARTITIONED)
+	private String tenant_id;
+	
+	@PrimaryKeyColumn(name = "notify_index", ordinal = 2, type = PrimaryKeyType.CLUSTERED, ordering = Ordering.DESCENDING)
 	private long notify_index;
 
 	@Column(value = "sender_id")
@@ -102,4 +106,13 @@ public class OfflineNotifyEntity
 	{
 		this.notify_time = notify_time;
 	}
+
+	public String getTenant_id() {
+		return tenant_id;
+	}
+
+	public void setTenant_id(String tenant_id) {
+		this.tenant_id = tenant_id;
+	}
+	
 }
