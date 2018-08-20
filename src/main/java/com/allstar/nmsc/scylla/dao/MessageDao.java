@@ -105,7 +105,7 @@ public class MessageDao
 			}
 		};
 
-		String cql = "SELECT MAX(msg_index) FROM http_message WHERE session_key ='%s' AND tenant_id='%s'";
+		String cql = "SELECT MAX(msg_index) FROM rcs_message WHERE session_key ='%s' AND tenant_id='%s'";
 		List<Long> list = op.getCqlOperations().query(String.format(cql, session_key, tenant_id), mapper);
 
 		if (list != null && list.size() > 0)
@@ -135,7 +135,7 @@ public class MessageDao
 		{
 			end_index = 0;
 		}
-		String cql = "SELECT * FROM http_message WHERE session_key='%s' AND tenant_id='%s' AND msg_index <= %s AND msg_index >=%s";
+		String cql = "SELECT * FROM rcs_message WHERE session_key='%s' AND tenant_id='%s' AND msg_index <= %s AND msg_index >=%s";
 
 		return op.select(String.format(cql, session_key, tenant_id, start_index, end_index), MessageEntity.class);
 	}
@@ -236,24 +236,24 @@ public class MessageDao
 	public void ExtMessageAppend(String sessionKey, String messageIndex, String extMap)
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		op.getCqlOperations().execute("UPDATE http_message set msg_ext = msg_ext + " + extMap + " WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
+		op.getCqlOperations().execute("UPDATE rcs_message set msg_ext = msg_ext + " + extMap + " WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
 	}
 
 	public void ExtMessageUpdate(String sessionKey, String messageIndex, String extMap) throws Exception
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		op.getCqlOperations().execute("UPDATE http_message set msg_ext = " + extMap + " WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
+		op.getCqlOperations().execute("UPDATE rcs_message set msg_ext = " + extMap + " WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
 	}
 
 	public void ExtMessageUpdateOne(String sessionKey, String messageIndex, String extKey, String extValue)
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		op.getCqlOperations().execute("UPDATE http_message set msg_ext['" + extKey + "'] = '" + extValue + "' WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
+		op.getCqlOperations().execute("UPDATE rcs_message set msg_ext['" + extKey + "'] = '" + extValue + "' WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
 	}
 
 	public void ExtMessageRemove(String sessionKey, String messageIndex, String extKey)
 	{
 		CassandraOperations op = ScyllaConnector.instance().getTemplate();
-		op.getCqlOperations().execute("UPDATE http_message set msg_ext = msg_ext - " + extKey + " WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
+		op.getCqlOperations().execute("UPDATE rcs_message set msg_ext = msg_ext - " + extKey + " WHERE session_key='" + sessionKey + "' AND msg_index=" + messageIndex);
 	}
 }
